@@ -218,7 +218,7 @@ const AdminDashboard: React.FC<Props> = ({ onBack }) => {
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h3 className="text-lg font-bold text-emerald-950">AI 预测准确度演变 (点击交互)</h3>
+              <h3 className="text-lg font-bold text-emerald-950">AI 预测准确度演变</h3>
               <p className="text-xs text-emerald-800/60 font-medium">点击年份节点，筛选下方个案数据</p>
             </div>
             {selectedYear && (
@@ -273,7 +273,7 @@ const AdminDashboard: React.FC<Props> = ({ onBack }) => {
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h3 className="text-lg font-bold text-emerald-950">选科偏差分析 (点击交互)</h3>
+              <h3 className="text-lg font-bold text-emerald-950">选科偏差分析</h3>
               <p className="text-xs text-emerald-800/60 font-medium">点击柱状图，查看不同组合的就业流向</p>
             </div>
             <div className="px-2 py-1 bg-emerald-100/70 backdrop-blur-md text-emerald-900 text-xs rounded font-bold border border-emerald-200/50">

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ExamRecord, Subject, UserProfile } from '../types';
 import { EXAM_TYPES, SUBJECT_LIST } from '../constants';
 
@@ -8,6 +9,135 @@ interface Props {
   onNext: () => void;
   onBack: () => void;
 }
+
+// Grade Selector Component
+const GradeSelector: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [expandedGrade, setExpandedGrade] = useState<string | null>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
+          dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setExpandedGrade(null);
+      }
+    };
+
+    const updatePosition = () => {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom + 8,
+          left: rect.left
+        });
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 8,
+        left: rect.left
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  const mainGrades = ['A', 'B', 'C', 'D', 'E'];
+  const subGrades: Record<string, string[]> = {
+    A: ['A1', 'A2', 'A3', 'A4', 'A5'],
+    B: ['B1', 'B2', 'B3', 'B4', 'B5'],
+    C: ['C1', 'C2', 'C3', 'C4', 'C5'],
+    D: ['D1', 'D2', 'D3', 'D4', 'D5'],
+  };
+
+  const handleMainGradeClick = (grade: string) => {
+    if (grade === 'E') {
+      onChange('E');
+      setIsOpen(false);
+      setExpandedGrade(null);
+    } else {
+      setExpandedGrade(expandedGrade === grade ? null : grade);
+    }
+  };
+
+  const handleSubGradeClick = (subGrade: string) => {
+    onChange(subGrade);
+    setIsOpen(false);
+    setExpandedGrade(null);
+  };
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        className="w-20 px-3 py-4 rounded-2xl border-2 border-emerald-100 bg-gradient-to-br from-emerald-50 to-white hover:from-emerald-100 hover:to-emerald-50 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all font-bold text-emerald-700 shadow-sm cursor-pointer text-center"
+      >
+        {value || '-'}
+      </button>
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed w-32 bg-white rounded-2xl shadow-2xl border-2 border-emerald-100 overflow-hidden z-[9999] max-h-64 overflow-y-auto"
+          style={{ top: `${position.top}px`, left: `${position.left}px` }}
+        >
+          {mainGrades.map((grade) => (
+            <div key={grade}>
+              <button
+                type="button"
+                onClick={() => handleMainGradeClick(grade)}
+                className="w-full px-4 py-2.5 text-left font-bold text-emerald-900 hover:bg-emerald-50 transition-colors flex items-center justify-between"
+              >
+                {grade}
+                {grade !== 'E' && (
+                  <svg className={`w-4 h-4 transition-transform ${expandedGrade === grade ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
+              </button>
+              {expandedGrade === grade && subGrades[grade] && (
+                <div className="bg-emerald-50/50">
+                  {subGrades[grade].map((sub) => (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => handleSubGradeClick(sub)}
+                      className="w-full px-6 py-2 text-left text-sm font-medium text-emerald-800 hover:bg-emerald-100 transition-colors"
+                    >
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
 
 const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
   const [activeTab, setActiveTab] = useState(EXAM_TYPES[0].id);
@@ -70,12 +200,12 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
       };
 
       const subjectGrades: Record<string, string> = {
-          [Subject.PHYSICS]: ['A', 'A', 'B'][index],
-          [Subject.CHEMISTRY]: ['B', 'A', 'A'][index],
-          [Subject.BIOLOGY]: ['A', 'B', 'A'][index],
-          [Subject.HISTORY]: ['B', 'B', 'C'][index],
-          [Subject.GEOGRAPHY]: ['B', 'C', 'B'][index],
-          [Subject.POLITICS]: ['C', 'B', 'B'][index],
+          [Subject.PHYSICS]: ['A2', 'A1', 'B3'][index],
+          [Subject.CHEMISTRY]: ['B1', 'A3', 'A2'][index],
+          [Subject.BIOLOGY]: ['A1', 'B2', 'A4'][index],
+          [Subject.HISTORY]: ['B3', 'B4', 'C2'][index],
+          [Subject.GEOGRAPHY]: ['B2', 'C1', 'B5'][index],
+          [Subject.POLITICS]: ['C3', 'B5', 'B4'][index],
       };
 
       let totalScore = 0;
@@ -285,23 +415,10 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
                                         }`}
                                     />
                                 </div>
-                                <select
+                                <GradeSelector
                                     value={activeExam.subjectGrades?.[sub.key] || ''}
-                                    onChange={(e) => handleSubjectGradeChange(activeExamIndex, sub.key, e.target.value)}
-                                    className="w-20 px-3 py-4 rounded-2xl border-2 border-emerald-100 bg-gradient-to-br from-emerald-50 to-white hover:from-emerald-100 hover:to-emerald-50 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all font-bold text-emerald-700 shadow-sm cursor-pointer text-center appearance-none [&>option]:bg-white [&>option]:text-emerald-900 [&>option:hover]:bg-emerald-50 [&>option:checked]:bg-emerald-100"
-                                    style={{
-                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2310b981' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
-                                        backgroundPosition: 'right 0.5rem center',
-                                        backgroundRepeat: 'no-repeat',
-                                        backgroundSize: '1.5em 1.5em',
-                                        paddingRight: '2.5rem'
-                                    }}
-                                >
-                                    <option value="">-</option>
-                                    {['A', 'B', 'C', 'D', 'E'].map(g => (
-                                        <option key={g} value={g}>{g}</option>
-                                    ))}
-                                </select>
+                                    onChange={(grade) => handleSubjectGradeChange(activeExamIndex, sub.key, grade)}
+                                />
                             </div>
                         </div>
                     ))}

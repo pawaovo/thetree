@@ -17,10 +17,10 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
   const currentExams = data.exams || EXAM_TYPES.map(type => ({
     examName: type.label,
     scores: {},
+    subjectGrades: {},
     totalScore: undefined,
     rank: undefined,
-    totalStudents: undefined,
-    assignedGrade: undefined
+    totalStudents: undefined
   }));
 
   const handleScoreChange = (examIndex: number, subjectKey: string, value: string) => {
@@ -34,28 +34,29 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
   };
 
   const handleMetaChange = (
-    examIndex: number, 
-    field: 'rank' | 'totalStudents' | 'totalScore' | 'assignedGrade', 
+    examIndex: number,
+    field: 'rank' | 'totalStudents' | 'totalScore',
     value: string
   ) => {
     const newExams = [...currentExams];
     const exam = newExams[examIndex];
+    const numValue = value === '' ? undefined : parseFloat(value);
+    if (field === 'rank') exam.rank = numValue;
+    if (field === 'totalStudents') exam.totalStudents = numValue;
+    if (field === 'totalScore') exam.totalScore = numValue;
+    updateData({ exams: newExams });
+  };
 
-    if (field === 'assignedGrade') {
-        exam.assignedGrade = value;
-    } else {
-        const numValue = value === '' ? undefined : parseFloat(value);
-        if (field === 'rank') exam.rank = numValue;
-        if (field === 'totalStudents') exam.totalStudents = numValue;
-        if (field === 'totalScore') exam.totalScore = numValue;
-    }
+  const handleSubjectGradeChange = (examIndex: number, subjectKey: string, grade: string) => {
+    const newExams = [...currentExams];
+    if (!newExams[examIndex].subjectGrades) newExams[examIndex].subjectGrades = {};
+    newExams[examIndex].subjectGrades![subjectKey] = grade;
     updateData({ exams: newExams });
   };
 
   // Generate Mock Data
   const mockExamsData = useMemo(() => {
     return EXAM_TYPES.map((type, index) => {
-      // Base scores that improve slightly over time or fluctuate realistically
       const baseScores: Record<string, number> = {
           [Subject.CHINESE]: 108 + (index * 2),
           [Subject.MATH]: 125 + (index * 5),
@@ -67,17 +68,26 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
           [Subject.GEOGRAPHY]: 76,
           [Subject.POLITICS]: 68,
       };
-      
+
+      const subjectGrades: Record<string, string> = {
+          [Subject.PHYSICS]: ['A', 'A', 'B'][index],
+          [Subject.CHEMISTRY]: ['B', 'A', 'A'][index],
+          [Subject.BIOLOGY]: ['A', 'B', 'A'][index],
+          [Subject.HISTORY]: ['B', 'B', 'C'][index],
+          [Subject.GEOGRAPHY]: ['B', 'C', 'B'][index],
+          [Subject.POLITICS]: ['C', 'B', 'B'][index],
+      };
+
       let totalScore = 0;
       Object.values(baseScores).forEach(s => totalScore += s);
 
       return {
           examName: type.label,
           scores: baseScores,
+          subjectGrades: subjectGrades,
           totalScore: totalScore,
-          rank: Math.max(1, 120 - (index * 15)), // Rank improves from 120 to 90
-          totalStudents: 800,
-          assignedGrade: ['B', 'A', 'A'][index] // Mock grade
+          rank: Math.max(1, 120 - (index * 15)),
+          totalStudents: 800
       };
     });
   }, []);
@@ -115,18 +125,24 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
                     <div className="space-y-4">
                         {mockExamsData.map((exam, idx) => (
                             <div key={idx} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                <div className="flex justify-between text-sm font-bold text-emerald-900 mb-2">
+                                <div className="flex justify-between text-sm font-bold text-emerald-900 mb-3">
                                     <span>{exam.examName}</span>
-                                    <div className="flex gap-2">
-                                        <span className="bg-emerald-100 px-2 rounded text-emerald-700">等级: {exam.assignedGrade}</span>
-                                        <span>Rank: {exam.rank}</span>
-                                    </div>
+                                    <span>Rank: {exam.rank}/{exam.totalStudents}</span>
                                 </div>
-                                <div className="grid grid-cols-5 gap-2 text-xs text-gray-500">
-                                    {Object.entries(exam.scores).slice(0,5).map(([k, v]) => (
-                                        <div key={k} className="bg-gray-50 px-2 py-1 rounded-lg text-center font-medium">{v}</div>
-                                    ))}
-                                    <div className="col-span-5 text-center text-gray-300 text-[10px] mt-1">...更多科目</div>
+                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                    {SUBJECT_LIST.map((sub) => {
+                                        const score = exam.scores[sub.key];
+                                        const grade = exam.subjectGrades?.[sub.key];
+                                        return (
+                                            <div key={sub.key} className="bg-gray-50 px-2 py-1.5 rounded-lg">
+                                                <div className="font-bold text-gray-700">{sub.label}</div>
+                                                <div className="flex items-center justify-between mt-0.5">
+                                                    <span className="text-emerald-600 font-medium">{score}</span>
+                                                    {grade && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-bold">{grade}</span>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))}
@@ -182,22 +198,22 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
         {/* Form Content */}
         <div className="p-6 md:p-8">
             {/* Meta Data Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                 <div className="col-span-1">
                    <label className="block text-xs font-bold text-emerald-900/60 mb-2 pl-2">年级排名 (Rank)</label>
-                   <input 
-                      type="number" 
+                   <input
+                      type="number"
                       placeholder="150"
                       value={activeExam.rank || ''}
                       onChange={(e) => handleMetaChange(activeExamIndex, 'rank', e.target.value)}
-                      onWheel={(e) => e.currentTarget.blur()} // Prevent accidentally changing numbers on scroll
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="w-full px-5 py-3.5 rounded-2xl border-none bg-white focus:bg-white focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all font-mono text-emerald-900 font-bold shadow-inner"
                    />
                 </div>
                 <div className="col-span-1">
                    <label className="block text-xs font-bold text-emerald-900/60 mb-2 pl-2">年级总人数</label>
-                   <input 
-                      type="number" 
+                   <input
+                      type="number"
                       placeholder="800"
                       value={activeExam.totalStudents || ''}
                       onChange={(e) => handleMetaChange(activeExamIndex, 'totalStudents', e.target.value)}
@@ -206,51 +222,90 @@ const StepGrades: React.FC<Props> = ({ data, updateData, onNext, onBack }) => {
                    />
                 </div>
                 <div className="col-span-2 md:col-span-1">
-                   <label className="block text-xs font-bold text-emerald-900/60 mb-2 pl-2">赋分等级</label>
-                   <select 
-                      value={activeExam.assignedGrade || ''}
-                      onChange={(e) => handleMetaChange(activeExamIndex, 'assignedGrade', e.target.value)}
-                      className="w-full px-5 py-3.5 rounded-2xl border-none bg-white focus:bg-white focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all font-bold text-emerald-900 shadow-inner appearance-none cursor-pointer"
-                   >
-                       <option value="" disabled>选择</option>
-                       {['A', 'B', 'C', 'D', 'E'].map(g => (
-                           <option key={g} value={g}>{g}</option>
-                       ))}
-                   </select>
-                </div>
-                 <div className="col-span-2 md:col-span-1">
                    <div className="h-full flex items-center p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 text-xs text-emerald-800 font-medium leading-relaxed">
-                      ℹ️ 等级与排名是AI判定学科优势的重要依据。
+                      ℹ️ 选考科目需填写赋分等级
                    </div>
                 </div>
             </div>
 
             <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-full mb-8"></div>
 
-            {/* Scores Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6">
-                {SUBJECT_LIST.map((sub) => (
-                    <div key={sub.key} className="relative group">
-                        <label className="flex justify-between text-sm font-bold text-emerald-900/80 mb-2 px-1">
-                            <span className={sub.type === 'main' ? 'text-emerald-950' : ''}>{sub.label}</span>
-                        </label>
-                        <div className="relative">
-                            <input 
-                                type="number"
-                                placeholder="-"
-                                value={activeExam.scores[sub.key] || ''}
-                                onChange={(e) => handleScoreChange(activeExamIndex, sub.key, e.target.value)}
-                                onWheel={(e) => e.currentTarget.blur()}
-                                className={`w-full px-5 py-4 rounded-2xl border outline-none transition-all font-mono text-xl shadow-sm ${
-                                    activeExam.scores[sub.key] 
-                                    ? 'bg-white border-emerald-100 text-emerald-900 shadow-emerald-100' 
-                                    : 'bg-white/50 border-transparent text-gray-400 focus:bg-white focus:border-emerald-200 focus:shadow-md'
-                                }`}
-                            />
-                            {sub.type === 'main' && <span className="absolute right-3 top-2 text-[10px] text-emerald-200 font-black tracking-wider select-none">MAIN</span>}
+            {/* Main Subjects */}
+            <div className="mb-8">
+                <h3 className="text-xs font-bold text-emerald-900/60 mb-4 pl-2">主科</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6">
+                    {SUBJECT_LIST.filter(sub => sub.type === 'main').map((sub) => (
+                        <div key={sub.key} className="relative group">
+                            <label className="flex justify-between text-sm font-bold text-emerald-950 mb-2 px-1">
+                                <span>{sub.label}</span>
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    placeholder="-"
+                                    value={activeExam.scores[sub.key] || ''}
+                                    onChange={(e) => handleScoreChange(activeExamIndex, sub.key, e.target.value)}
+                                    onWheel={(e) => e.currentTarget.blur()}
+                                    className={`w-full px-5 py-4 rounded-2xl border outline-none transition-all font-mono text-xl shadow-sm ${
+                                        activeExam.scores[sub.key]
+                                        ? 'bg-white border-emerald-100 text-emerald-900 shadow-emerald-100'
+                                        : 'bg-white/50 border-transparent text-gray-400 focus:bg-white focus:border-emerald-200 focus:shadow-md'
+                                    }`}
+                                />
+                                <span className="absolute right-3 top-2 text-[10px] text-emerald-200 font-black tracking-wider select-none">MAIN</span>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+            </div>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-full mb-8"></div>
+
+            {/* Elective Subjects */}
+            <div>
+                <h3 className="text-xs font-bold text-emerald-900/60 mb-4 pl-2">选考科目</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                    {SUBJECT_LIST.filter(sub => sub.type === 'sub').map((sub) => (
+                        <div key={sub.key} className="relative group">
+                            <label className="flex justify-between text-sm font-bold text-emerald-900/80 mb-2 px-1">
+                                <span>{sub.label}</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="-"
+                                        value={activeExam.scores[sub.key] || ''}
+                                        onChange={(e) => handleScoreChange(activeExamIndex, sub.key, e.target.value)}
+                                        onWheel={(e) => e.currentTarget.blur()}
+                                        className={`w-full px-5 py-4 rounded-2xl border outline-none transition-all font-mono text-xl shadow-sm ${
+                                            activeExam.scores[sub.key]
+                                            ? 'bg-white border-emerald-100 text-emerald-900 shadow-emerald-100'
+                                            : 'bg-white/50 border-transparent text-gray-400 focus:bg-white focus:border-emerald-200 focus:shadow-md'
+                                        }`}
+                                    />
+                                </div>
+                                <select
+                                    value={activeExam.subjectGrades?.[sub.key] || ''}
+                                    onChange={(e) => handleSubjectGradeChange(activeExamIndex, sub.key, e.target.value)}
+                                    className="w-20 px-3 py-4 rounded-2xl border-2 border-emerald-100 bg-gradient-to-br from-emerald-50 to-white hover:from-emerald-100 hover:to-emerald-50 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all font-bold text-emerald-700 shadow-sm cursor-pointer text-center appearance-none [&>option]:bg-white [&>option]:text-emerald-900 [&>option:hover]:bg-emerald-50 [&>option:checked]:bg-emerald-100"
+                                    style={{
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2310b981' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                                        backgroundPosition: 'right 0.5rem center',
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: '1.5em 1.5em',
+                                        paddingRight: '2.5rem'
+                                    }}
+                                >
+                                    <option value="">-</option>
+                                    {['A', 'B', 'C', 'D', 'E'].map(g => (
+                                        <option key={g} value={g}>{g}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
       </div>

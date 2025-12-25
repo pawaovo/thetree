@@ -152,6 +152,9 @@ const Report: React.FC<Props> = ({ user, result, onRestart }) => {
   const [showContent, setShowContent] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1, y: -1 });
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
 
   // Carousel State
   // We start at CLONE_COUNT which is the first "Real" item index in the extended array
@@ -626,7 +629,7 @@ const Report: React.FC<Props> = ({ user, result, onRestart }) => {
            </div>
            
            <div className="text-center mt-8 relative z-20">
-              <button 
+              <button
                 onClick={onRestart}
                 className="group relative px-8 py-3 bg-white/80 backdrop-blur-sm text-emerald-900 font-bold rounded-2xl shadow-lg shadow-emerald-900/5 hover:shadow-emerald-900/10 transition-all border border-transparent hover:border-emerald-200 hover:-translate-y-1 overflow-hidden"
               >
@@ -639,6 +642,100 @@ const Report: React.FC<Props> = ({ user, result, onRestart }) => {
                 <div className="absolute inset-0 bg-emerald-50 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
               </button>
            </div>
+
+           {/* Join The Tree Button */}
+           <div className="text-center mt-6 relative z-20">
+              <button
+                onClick={() => setShowJoinModal(true)}
+                className="group relative px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all hover:-translate-y-1 overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  加入The Tree大家庭
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+              </button>
+           </div>
+
+           {/* Join Modal */}
+           {showJoinModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-emerald-900/20 backdrop-blur-sm" onClick={() => setShowJoinModal(false)}></div>
+                  <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 overflow-hidden border border-emerald-100">
+                      <div className="p-8">
+                          <div className="flex items-center justify-between mb-6">
+                              <h3 className="text-2xl font-bold text-emerald-900">加入The Tree大家庭</h3>
+                              <button
+                                  onClick={() => setShowJoinModal(false)}
+                                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                              >
+                                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                              </button>
+                          </div>
+
+                          <div className="mb-6 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                              <p className="text-sm text-emerald-900/80 leading-relaxed">
+                                  我们诚邀您参与后续的追踪调查，帮助我们完善数据库和AI决策效果。您的参与将为更多学生提供更精准的选科建议。
+                              </p>
+                              <p className="text-xs text-emerald-700/60 mt-3 flex items-center gap-1">
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                  您的数据将被加密保护，绝不会泄露
+                              </p>
+                          </div>
+
+                          <div className="space-y-4 mb-6">
+                              <div>
+                                  <label className="block text-sm font-bold text-emerald-900/80 mb-2 pl-2">手机号码</label>
+                                  <input
+                                      type="tel"
+                                      placeholder="请输入您的手机号码"
+                                      value={phone}
+                                      onChange={(e) => setPhone(e.target.value)}
+                                      className="w-full px-5 py-3.5 rounded-2xl border-2 border-emerald-100 bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all text-emerald-900 font-medium"
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-sm font-bold text-emerald-900/80 mb-2 pl-2">电子邮箱</label>
+                                  <input
+                                      type="email"
+                                      placeholder="请输入您的电子邮箱"
+                                      value={email}
+                                      onChange={(e) => setEmail(e.target.value)}
+                                      className="w-full px-5 py-3.5 rounded-2xl border-2 border-emerald-100 bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all text-emerald-900 font-medium"
+                                  />
+                              </div>
+                          </div>
+
+                          <div className="flex gap-3">
+                              <button
+                                  onClick={() => setShowJoinModal(false)}
+                                  className="flex-1 px-6 py-3.5 text-gray-500 hover:text-gray-800 font-bold text-sm transition-colors rounded-2xl hover:bg-gray-50"
+                              >
+                                  暂不参与
+                              </button>
+                              <button
+                                  onClick={() => {
+                                      // TODO: Handle submission
+                                      alert('感谢您的参与！我们会尽快与您联系。');
+                                      setShowJoinModal(false);
+                                      setPhone('');
+                                      setEmail('');
+                                  }}
+                                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-600 shadow-lg text-sm font-bold transition-all hover:scale-105 active:scale-95"
+                              >
+                                  确认提交
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+           )}
         </div>
       </div>
     </div>

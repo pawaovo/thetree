@@ -18,10 +18,10 @@ export enum Subject {
 export interface ExamRecord {
   examName: string; // e.g., "Grade 10 Mid-term"
   scores: Record<string, number>; // Subject key -> Score
+  subjectGrades?: Record<string, string>; // Subject key -> Grade (A/B/C/D/E) for elective subjects
   totalScore?: number;
   rank?: number;
   totalStudents?: number;
-  assignedGrade?: string; // New field for Grade Assignment (A/B/C/D/E)
 }
 
 export interface HollandQuestion {

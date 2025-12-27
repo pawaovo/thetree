@@ -55,6 +55,28 @@ const StepIntro: React.FC<Props> = ({ data, updateData, onNext, onAdminClick }) 
 
             <div className="text-left">
               <label className="block text-sm font-bold text-emerald-900/80 mb-2 ml-1">
+                输入账号
+              </label>
+              <input
+                type="text"
+                placeholder="请输入账号..."
+                className="w-full px-5 py-4 rounded-2xl border border-transparent bg-white/50 focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all text-emerald-900 placeholder-emerald-900/30 font-medium shadow-inner"
+              />
+            </div>
+
+            <div className="text-left">
+              <label className="block text-sm font-bold text-emerald-900/80 mb-2 ml-1">
+                输入密码
+              </label>
+              <input
+                type="password"
+                placeholder="请输入密码..."
+                className="w-full px-5 py-4 rounded-2xl border border-transparent bg-white/50 focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-100/50 outline-none transition-all text-emerald-900 placeholder-emerald-900/30 font-medium shadow-inner"
+              />
+            </div>
+
+            <div className="text-left">
+              <label className="block text-sm font-bold text-emerald-900/80 mb-2 ml-1">
                 这棵树的性别是？
               </label>
               <div className="flex gap-4">
